@@ -47,11 +47,21 @@ def download(class_name, args):
         reader = csv.reader(dataset)
 
         for row in reader:
-            # print command for debugging
-            print("ffmpeg -ss " + str(row[1]) + " -t 10 -i $(youtube-dl -f 'bestaudio' -g https://www.youtube.com/watch?v=" +
-                       str(row[0]) + ") -ar " + str(DEFAULT_FS) + " -- \"" + dst_dir + "/" + str(row[0]) + "_" + row[1] + ".wav\"")
-            os.system(("ffmpeg -ss " + str(row[1]) + " -t 10 -i $(youtube-dl -f 'bestaudio' -g https://www.youtube.com/watch?v=" +
-                       str(row[0]) + ") -ar " + str(DEFAULT_FS) + " -- \"" + dst_dir + "/" + str(row[0]) + "_" + row[1] + ".wav\""))
+            youtube_id = row[0]
+            start_time = row[1]
+            duration = 10  # duration in seconds
+            output_path = os.path.join(dst_dir, f"{youtube_id}_{start_time}.mp4")
+
+            youtube_dl_command = f"yt-dlp -f best -g https://www.youtube.com/watch?v={youtube_id}"
+            result = os.popen(youtube_dl_command).read().strip()
+
+            if result:
+                video_url = result.split('\n')[0]  
+                ffmpeg_command = f"ffmpeg -ss {start_time} -t {duration} -i \"{video_url}\" -c copy \"{output_path}\""
+                print(ffmpeg_command)  
+                os.system(ffmpeg_command)
+            else:
+                print(f"Failed to get video URL for {youtube_id}")
 
 
 def create_csv(class_name, args):
